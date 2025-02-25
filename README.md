@@ -82,23 +82,31 @@ resource "aws_s3_bucket_public_access_block" "bucket1" {
   block_public_policy     = false
   ignore_public_acls      = false
   restrict_public_buckets = false
+
+  depends_on = [aws_s3_bucket.bucket1] # Ensure bucket exists first
 }
 
+# Upload index.html to the bucket
 resource "aws_s3_object" "index" {
-  bucket = "web-bucket-mathesh"
-  key    = "index.html"
-  source = "index.html"
+  bucket       = aws_s3_bucket.bucket1.id # Reference bucket ID
+  key          = "index.html"
+  source       = "index.html"
   content_type = "text/html"
+
+  depends_on = [aws_s3_bucket.bucket1] # Explicit dependency on bucket creation
 }
 
+# Upload error.html to the bucket
 resource "aws_s3_object" "error" {
-  bucket = "web-bucket-mathesh"
-  key    = "error.html"
-  source = "error.html"
+  bucket       = aws_s3_bucket.bucket1.id # Reference bucket ID
+  key          = "error.html"
+  source       = "error.html"
   content_type = "text/html"
+
+  depends_on = [aws_s3_bucket.bucket1] # Explicit dependency on bucket creation
 }
 
-
+# Configure the bucket as a static website
 resource "aws_s3_bucket_website_configuration" "bucket1" {
   bucket = aws_s3_bucket.bucket1.id
 
@@ -110,8 +118,10 @@ resource "aws_s3_bucket_website_configuration" "bucket1" {
     key = "error.html"
   }
 
+  depends_on = [aws_s3_bucket.bucket1] # Ensure bucket exists
 }
 
+# Apply a public read policy to the bucket
 resource "aws_s3_bucket_policy" "public_read_access" {
   bucket = aws_s3_bucket.bucket1.id
   policy = <<EOF
@@ -120,8 +130,8 @@ resource "aws_s3_bucket_policy" "public_read_access" {
   "Statement": [
     {
       "Effect": "Allow",
-	  "Principal": "*",
-      "Action": [ "s3:GetObject" ],
+      "Principal": "*",
+      "Action": ["s3:GetObject"],
       "Resource": [
         "${aws_s3_bucket.bucket1.arn}",
         "${aws_s3_bucket.bucket1.arn}/*"
@@ -130,7 +140,6 @@ resource "aws_s3_bucket_policy" "public_read_access" {
   ]
 }
 EOF
-}
 ```
 
 7. And then again run the command :
